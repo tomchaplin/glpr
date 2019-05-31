@@ -6,11 +6,12 @@ The interface is handled by `dialog` so should work on most systems, and even ov
 
 ## Usage
 
-To open up the print dialog for a given file simply execute
+First, download the script however you see fit, and make sure that it has executeable permissions.
+Ensure that the script is in your `PATH` and that you have `lpr`, `dialog` and a shell (`bash` by default).
+To open up the print dialog for a given file, simply execute
 ```
 glpr /path/to/file
 ```
-in your favourite shell.
 This will open up a dialog box with the default print options on your system.
 By selecting the appropriate item, you can change the following:
 
