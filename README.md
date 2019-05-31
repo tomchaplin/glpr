@@ -1,6 +1,6 @@
 # glpr
 
-`glpr` is a visual interface, in the terminal for printing files using `CUPS`.
+`glpr` is a visual interface, in the terminal, for printing files using `CUPS`.
 As the name suggests, it uses the Berkeley style `lpr` printing command to send the print job.
 The interface is handled by `dialog` so should work on most systems, and even over SSH.
 
