@@ -1,0 +1,137 @@
+#!/bin/bash
+PRINTER_LIST=$(lpstat -p | grep enabled | awk '{print $2}')
+DEFAULT_PRINTER=$(lpstat -d | awk '{print $4}')
+WORKING_PRINTER="$DEFAULT_PRINTER"
+DIALOG_TITLE="glpr"
+COPIES=1
+PAGE_RANGE=""
+PAGES_PER_SHEET=1
+declare -A PRINTER_OPTIONS
+
+get_printer_defaults() {
+	PRINTER_OPTIONS[PageSize]=$(lpoptions -p $WORKING_PRINTER -l | grep 'PageSize.*:' | grep -Po '\*.*?\s' | cut -c 2-)
+	PRINTER_OPTIONS[OutputMode]=$(lpoptions -p $WORKING_PRINTER -l | grep 'OutputMode.*:' | grep -Po '\*.*?\s' | cut -c 2-)
+	PRINTER_OPTIONS[Duplex]=$(lpoptions -p $WORKING_PRINTER -l | grep 'Duplex.*:' | grep -Po '\*.*?\s' | cut -c 2-)
+}
+
+display_main_dialog() {
+	choice=$(dialog --title "$DIALOG_TITLE" \
+		--ok-label "Change/Accept" \
+		--menu "Print Options" 20 70 8 \
+		"Printer" "$WORKING_PRINTER" \
+		"Page Size" "${PRINTER_OPTIONS[PageSize]}" \
+		"Quality" "${PRINTER_OPTIONS[OutputMode]}" \
+		"Duplex" "${PRINTER_OPTIONS[Duplex]}" \
+		"Page Range" "$PAGE_RANGE" \
+		"Copies" "$COPIES" \
+		"Pages per sheet" "$PAGES_PER_SHEET" \
+		"Accept" "" 2>&1 >/dev/tty)
+	case $choice in
+		Printer)
+			display_printer_dialog
+			;;
+		"Page Size")
+			display_options_dialog "PageSize" "Page Size:"
+			;;
+		Quality)
+			display_options_dialog "OutputMode" "Print Quality:"
+			;;
+		Duplex)
+			display_options_dialog "Duplex" "Duplex Options:"
+			;;
+		Copies)
+			display_input_dialog "Copies:"
+			;;
+		"Page Range")
+			display_input_dialog "Page Range:"
+			;;
+		"Pages per sheet")
+			pages_per_sheet_dialog
+			;;
+		Accept)
+			build_print_command
+			;;
+		*)
+			;;
+	esac
+}
+
+display_printer_dialog() {
+	dialog_cmd=(dialog --title "$DIALOG_TITLE" --ok-label "Select" --nocancel --menu "Enabled Printers:" 20 70 8 )
+	options=()
+	while IFS= read -r printer
+	do
+		options+=("$printer" "")
+	done <<< "$PRINTER_LIST"
+	WORKING_PRINTER=$("${dialog_cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
+	get_printer_defaults	
+	display_main_dialog
+}
+
+display_options_dialog() {
+	dialog_cmd=(dialog --title "$DIALOG_TITLE" --ok-label "Select" --nocancel --menu "$2" 20 70 12 )
+	possible_sizes=$(lpoptions -p $WORKING_PRINTER -l | grep "$1.*:" | cut -d':' -f2-  | cut -c2- | tr " " "\n" )
+	options=()
+	while IFS= read -r option
+	do
+		# The default option has an asterix at the start, we need to remove this
+		if [[ $option == \** ]]; then
+			option="${option:1}"
+		fi
+		options+=("$option" "")
+	done <<< "$possible_sizes"
+	PRINTER_OPTIONS["$1"]=$("${dialog_cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
+	display_main_dialog
+}
+
+display_input_dialog() {
+	if [[ $1 == "Copies:" ]]; then
+		init_val=$COPIES
+	else
+		init_val=$PAGE_RANGE
+	fi
+	output=$(dialog --title "$DIALOG_TITLE" --nocancel --inputbox "$1" 20 70 "$init_val" 2>&1 >/dev/tty)
+	if [[ $1 == "Copies:" ]]; then
+		COPIES=$output
+	else
+		PAGE_RANGE=$output
+	fi
+	display_main_dialog
+}
+
+pages_per_sheet_dialog() {
+	PAGES_PER_SHEET=$(dialog --title ="$DIALOG_TITLE" --nocancel --ok-label "Select"\
+		--menu "Pages per sheet:" 20 70 6\
+		1 "" 2 "" 4 "" 6 "" 9 "" 16 "" 2>&1 >/dev/tty)
+	display_main_dialog
+}
+
+build_print_command() {
+	print_cmd=(lpr -P "$WORKING_PRINTER")
+	if [[ ! -z "$PAGE_RANGE" ]]; then
+		print_cmd+=(-o page-ranges="$PAGE_RANGE")
+	fi
+	print_cmd+=(-o PageSize="${PRINTER_OPTIONS[PageSize]}")
+	print_cmd+=(-o OutputMode="${PRINTER_OPTIONS[OutputMode]}")
+	print_cmd+=(-o Duplex="${PRINTER_OPTIONS[Duplex]}")
+	print_cmd+=(-o number-up="$PAGES_PER_SHEET")
+	print_cmd+=(-\#"$COPIES")
+	print_cmd+=("$FILENAME")
+	expanded_cmd="${print_cmd[@]}"
+	if dialog --stdout --title "$DIALOG_TITLE"\
+		--yesno "Running the following print command:\n\n$expanded_cmd" 20 70; then
+		eval "${print_cmd[@]}"
+	else
+		exit 1
+	fi
+}
+
+if [[ -z $1 ]]; then
+	echo "Please specify a filename"
+	exit 1
+else
+	FILENAME=$1
+fi
+
+get_printer_defaults
+display_main_dialog
