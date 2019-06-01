@@ -6,13 +6,13 @@ The interface is handled by `dialog` so should work on most systems, and even ov
 
 ## Usage
 
-First, download the script however you see fit, and make sure that it has executeable permissions.
+First, download the script however you see fit, and make sure that it has executable permissions.
 Ensure that the script is in your `PATH` and that you have `lpr`, `dialog` and a shell (`bash` by default).
-To open up the print dialog for a given file, simply execute
+To open up the print dialogue for a given file, simply execute
 ```
 glpr /path/to/file
 ```
-This will open up a dialog box with the default print options on your system.
+This will open up a dialogue box with the default print options on your system.
 By selecting the appropriate item, you can change the following:
 
 * Printer
@@ -23,7 +23,7 @@ By selecting the appropriate item, you can change the following:
 * Copies
 * Pages per sheet
 
-Note that these are the options that are avilable on my printer, and that I often wish to change.
+Note that these are the options that are available on my printer, and that I often wish to change.
 The options are hard-coded into the script so if you want different options you will have to change the script.
 However, once an option is selected, all of the possible values for the selected printer will be automatically detected.
 
@@ -36,11 +36,11 @@ You will then be presented with the command that will be executed and you can ch
 ## Limitations
 
 * Printer options are hard coded into the script.
-This list could be created autoamtically but I wanted a more concise interface so decided against it.
-* Files can only be printed by specifying a filepath, whereas `lpr` accepts content from `stdin`.
+This list could be created automatically but I wanted a more concise interface so decided against it.
+* Files can only be printed by specifying a file path, whereas `lpr` accepts content from `stdin`.
 This would be a good thing to implement next.
 * This has only been tested on one printer from one computer in one network.
-* The entire interface is in English.
+* The entire interface is only available in English.
 
 ## References
 * [Command-Line Printing and Options](https://www.cups.org/doc/options.html) on `cups.org`
