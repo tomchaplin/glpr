@@ -40,6 +40,7 @@ This list could be created autoamtically but I wanted a more concise interface s
 * Files can only be printed by specifying a filepath, whereas `lpr` accepts content from `stdin`.
 This would be a good thing to implement next.
 * This has only been tested on one printer from one computer in one network.
+* The entire interface is in English.
 
 ## References
 * [Command-Line Printing and Options](https://www.cups.org/doc/options.html) on `cups.org`
